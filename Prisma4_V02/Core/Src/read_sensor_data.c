@@ -252,6 +252,8 @@ int main_bmi(void)
      *          For BMI085 : BMI085_VARIANT
      *          For BMI088 : BMI088_VARIANT
      */
+
+    // Reset
     rslt = bmi08_interface_init(&bmi08dev, BMI08_I2C_INTF, BMI088_VARIANT);
     bmi08_error_codes_print_result("bmi08_interface_init", rslt);
 
@@ -274,11 +276,11 @@ int main_bmi(void)
 
                 printf("Sample_Count, Acc_Raw_X, Acc_Raw_Y, Acc_Raw_Z, Acc_ms2_X, Acc_ms2_Y, Acc_ms2_Z\n");
 
-                while (times_to_read < 10)
+                while (times_to_read < 100)
                 {
                     rslt = bmi08a_get_data_int_status(&status, &bmi08dev);
                     bmi08_error_codes_print_result("bmi08a_get_data_int_status", rslt);
-
+                    printf("Wait... %i\r\n",status);
                     if (status & BMI08_ACCEL_DATA_READY_INT)
                     {
                         rslt = bmi08a_get_data(&bmi08_accel, &bmi08dev);
@@ -309,7 +311,9 @@ int main_bmi(void)
                                z);
 
                         times_to_read = times_to_read + 1;
+                        HAL_Delay(200);
                     }
+
                 }
             }
 
@@ -323,7 +327,7 @@ int main_bmi(void)
 
                 printf("Sample_Count, Gyr_Raw_X, Gyr_Raw_Y, Gyr_Raw_Z, Gyr_DPS_X, Gyr_DPS_Y, Gyr_DPS_Z\n");
 
-                while (times_to_read < 10)
+                while (times_to_read < 50)
                 {
                     rslt = bmi08g_get_data_int_status(&status, &bmi08dev);
                     bmi08_error_codes_print_result("bmi08g_get_data_int_status", rslt);
@@ -348,6 +352,8 @@ int main_bmi(void)
                                z);
 
                         times_to_read = times_to_read + 1;
+                        HAL_Delay(200);
+
                     }
                 }
             }

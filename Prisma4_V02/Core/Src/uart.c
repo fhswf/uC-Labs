@@ -270,6 +270,7 @@ void USART_BT_ISR(void)     // Defined in uart_setup
         __HAL_UART_DISABLE_IT(puart_bt, UART_IT_TC);
     }
     /* And never call default handler */
+    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     return;
 }
 
