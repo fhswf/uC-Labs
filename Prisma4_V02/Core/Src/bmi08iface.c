@@ -34,7 +34,7 @@ uint8_t acc_dev_add;
 /*! Variable that holds the I2C device address or SPI chip selection for gyro */
 uint8_t gyro_dev_add;
 
-static I2C_HandleTypeDef BMI08_I2C_HANDLE;
+extern I2C_HandleTypeDef BMI08_I2C_HANDLE;
 
 /******************************************************************************/
 /*!                User interface functions                                   */
@@ -43,7 +43,22 @@ BMI08_INTF_RET_TYPE bmi08_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t
     uint8_t dev_addr = *(uint8_t*)intf_ptr;
     uint8_t status;
 
-    status = HAL_I2C_Mem_Read(&BMI08_I2C_HANDLE, dev_addr<<1, reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t *)reg_data, len, BMI08_BUS_TIMEOUT);
+    // CAUTION: MEM_READ not working with BMI088!!!
+    status = HAL_I2C_Master_Transmit(& BMI08_I2C_HANDLE, dev_addr<<1, &reg_addr, 1,BMI08_BUS_TIMEOUT);
+
+    if (status != HAL_OK)
+    {
+   		printf("ERROR: BMI Read (1) failed (dev 0x%2x reg 0x%02x status %i\r\n", dev_addr, reg_addr,status);
+    }
+    else
+    {
+    	status = HAL_I2C_Master_Receive(& BMI08_I2C_HANDLE, dev_addr<<1, (uint8_t *)reg_data, len, BMI08_BUS_TIMEOUT);
+    	if (status != HAL_OK)
+    	{
+       		printf("ERROR: BMI Read (2) failed (dev 0x%2x reg 0x%02x status %i\r\n", dev_addr, reg_addr,status);
+    	}
+    }
+
     return status;
 }
 
@@ -56,6 +71,10 @@ BMI08_INTF_RET_TYPE bmi08_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, u
     uint8_t status;
 
     status = HAL_I2C_Mem_Write(&BMI08_I2C_HANDLE, dev_addr<<1, reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t *)reg_data, len, BMI08_BUS_TIMEOUT);
+    if (status != HAL_OK)
+    {
+   		printf("ERROR: BMI Write (1) failed (dev 0x%2x reg 0x%02x status %i\r\n", dev_addr, reg_addr,status);
+    }
     return status;
 }
 
@@ -96,17 +115,52 @@ void bmi08_delay_us(uint32_t period, void *intf_ptr)
 int8_t bmi08_interface_init(struct bmi08_dev *bmi08, uint8_t intf, uint8_t variant)
 {
     int8_t rslt = BMI08_OK;
+    HAL_StatusTypeDef status;
+    uint8_t data[2];
 
-    dwt_delay_init();
+        rslt=dwt_delay_init();
+        printf("dwt init: %i\r\n",rslt);
         /* Bus configuration : I2C */
 		printf("I2C Interface \n");
 
 		/* To initialize the user I2C function */
-		acc_dev_add = BMI08_ACCEL_I2C_ADDR_PRIMARY;
-		gyro_dev_add = BMI08_GYRO_I2C_ADDR_PRIMARY;
+		acc_dev_add = BMI08_ACCEL_I2C_ADDR_SECONDARY;
+		gyro_dev_add = BMI08_GYRO_I2C_ADDR_SECONDARY;
 		bmi08->intf = BMI08_I2C_INTF;
 		bmi08->read = bmi08_i2c_read;
 		bmi08->write = bmi08_i2c_write;
+
+		/* Check I2C access */
+		//I2C_BusRecover(GPIOA, GPIO_PIN_15,GPIOB, GPIO_PIN_7);
+		HAL_Delay(20);
+
+		status = HAL_I2C_IsDeviceReady( & BMI08_I2C_HANDLE, acc_dev_add<<1, 1,500);
+		if (status != HAL_OK)
+		{
+			printf("ERROR: BMI088 accelerometer 0x%02x not responding to I2C, status %i\r\n",acc_dev_add, status);
+			HAL_Delay(100);	/* Time for printf */
+			Error_Handler();
+		}
+
+		status = HAL_I2C_IsDeviceReady( & BMI08_I2C_HANDLE, gyro_dev_add<<1, 1,500);
+		if (status != HAL_OK)
+		{
+			printf("ERROR: BMI088 gyrometer not responding to I2C\r\n");
+			HAL_Delay(100);	/* Time for printf */
+			Error_Handler();
+		}
+
+		// Soft Reset
+		data[0] = BMI08_REG_ACCEL_SOFTRESET;
+		data[1] = BMI08_SOFT_RESET_CMD;
+		status = HAL_I2C_Master_Transmit(& BMI08_I2C_HANDLE, acc_dev_add<<1, data, 2,BMI08_BUS_TIMEOUT);
+		printf("BMI Soft Reset acc %i\r\n",status);
+		HAL_Delay(2);
+		data[0] = BMI08_REG_GYRO_SOFTRESET;
+		data[1] = BMI08_SOFT_RESET_CMD;
+		HAL_I2C_Master_Transmit(& BMI08_I2C_HANDLE, gyro_dev_add<<1, data, 2,BMI08_BUS_TIMEOUT);
+		printf("BMI Soft Reset gyro %i\r\n",status);
+		HAL_Delay(100);
 
 		/* SDO pin is made low */
 		//(void)coines_set_pin_config(COINES_SHUTTLE_PIN_SDO, COINES_PIN_DIRECTION_OUT, COINES_PIN_VALUE_LOW);

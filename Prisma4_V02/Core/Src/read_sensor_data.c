@@ -99,16 +99,17 @@ static int8_t init_bmi08(void)
     if (rslt == BMI08_OK)
     {
         rslt = bmi08g_init(&bmi08dev);
+        printf("bmi08g_init %i\r\n",rslt);
         bmi08_error_codes_print_result("bmi08g_init", rslt);
     }
-
+    /*
     if (rslt == BMI08_OK)
     {
         printf("Uploading config file !\n");
         rslt = bmi08a_load_config_file(&bmi08dev);
         bmi08_error_codes_print_result("bmi08a_load_config_file", rslt);
     }
-
+	*/
     if (rslt == BMI08_OK)
     {
         bmi08dev.accel_cfg.odr = BMI08_ACCEL_ODR_1600_HZ;

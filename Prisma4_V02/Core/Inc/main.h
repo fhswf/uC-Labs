@@ -77,6 +77,8 @@ void Error_Handler(void);
 #define BMI08_INT1_GPIO_Port GPIOA
 #define BMI08_INT3_Pin GPIO_PIN_6
 #define BMI08_INT3_GPIO_Port GPIOA
+#define DISP_ON_Pin GPIO_PIN_7
+#define DISP_ON_GPIO_Port GPIOA
 #define BT_TX_Pin GPIO_PIN_4
 #define BT_TX_GPIO_Port GPIOC
 #define BT_RX_Pin GPIO_PIN_5

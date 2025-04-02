@@ -23,6 +23,7 @@
  *****************************************************/
 
 #include "main.h"
+#include "dwt_delay.h"
 
 #define BOOTLOADER_FLAG_VALUE  0xDEADBEEF   // Value to identify bootloader request
 #define BOOTLOADER_FLAG_OFFSET 500			// Offset from top of RAM (within stack)
@@ -81,7 +82,7 @@ void boot_stage2()
 	// Power On Reset ... (i.e. plugging in USB cable)
 	*bootloader_flag = 0;
 	HAL_Delay(10);
-
+	dwt_delay_init();
 	// Init GPIO for bootloader only
 	MX_GPIO_Init_boot();
 
@@ -153,6 +154,8 @@ static void MX_GPIO_Init_boot(void)
  *
  * Send S.O.S.
  *
+ * -> Dont use HAL_Delay, since IRQs are stopped...
+ *
  *****************************************************/
 void sos_error()
 {
@@ -163,12 +166,12 @@ void sos_error()
 	for (uint8_t i=0;i<18;i++)
 	{
 		HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-		HAL_Delay(100);
+		dwt_delay_ms(100);
 		if ( (i>5) && (i<12) )
 		{
-			HAL_Delay(200);
+			dwt_delay_ms(200);
 		}
 	}
 	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-    HAL_Delay(500);
+	dwt_delay_ms(2000);
 }

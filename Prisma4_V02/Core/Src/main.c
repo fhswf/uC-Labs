@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "boot.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,6 +44,8 @@
 ADC_HandleTypeDef hadc1;
 
 I2C_HandleTypeDef hi2c1;
+
+SPI_HandleTypeDef hspi3;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
@@ -70,6 +72,7 @@ static void MX_TIM6_Init(void);
 static void MX_TIM8_Init(void);
 static void MX_TIM17_Init(void);
 static void MX_TIM7_Init(void);
+static void MX_SPI3_Init(void);
 /* USER CODE BEGIN PFP */
 void main_user();
 
@@ -88,6 +91,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  boot_stage1();
 
   /* USER CODE END 1 */
 
@@ -104,7 +108,18 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  boot_stage2();
+#if 0
+  /* See eg:   https://blog.martincowen.me.uk/how-to-harness-the-power-of-generated-code-in-stm32cubeide-with-your-custom-code.html
+   *
+   * This disables the initialization but is compatible whit STM32CubeIDE code generation/updating, since
+   * we only add code in the user code sections ;-)
+   *
+   * Reason for disabling here and copying most in the user section below is, that MX_Device_Init causes a reset
+   * when USB not connected
+   *
+   *
+   */
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -119,8 +134,27 @@ int main(void)
   MX_TIM8_Init();
   MX_TIM17_Init();
   MX_TIM7_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
+#endif
+   MX_GPIO_Init();
+   // Only activate USB CDC if USB is connected
+   if (HAL_GPIO_ReadPin(USB_PWRD_GPIO_Port, USB_PWRD_Pin)==1)
+   {
+	   MX_USB_Device_Init();
+   }
+   MX_I2C1_Init();
+   MX_USART1_UART_Init();
+   MX_ADC1_Init();
+   MX_TIM1_Init();
+   MX_TIM3_Init();
+   MX_TIM6_Init();
+   MX_TIM8_Init();
+   MX_TIM17_Init();
+   MX_TIM7_Init();
+   MX_SPI3_Init();
   main_user();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -264,7 +298,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x20611033;
+  hi2c1.Init.Timing = 0x20B17DB6;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -293,6 +327,46 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief SPI3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI3_Init(void)
+{
+
+  /* USER CODE BEGIN SPI3_Init 0 */
+
+  /* USER CODE END SPI3_Init 0 */
+
+  /* USER CODE BEGIN SPI3_Init 1 */
+
+  /* USER CODE END SPI3_Init 1 */
+  /* SPI3 parameter configuration*/
+  hspi3.Instance = SPI3;
+  hspi3.Init.Mode = SPI_MODE_MASTER;
+  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi3.Init.NSS = SPI_NSS_SOFT;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi3.Init.CRCPolynomial = 7;
+  hspi3.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi3.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI3_Init 2 */
+
+  /* USER CODE END SPI3_Init 2 */
 
 }
 
@@ -709,7 +783,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BMI08_INT1_Pin|BMI08_INT3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DISP_CS_Pin|DISP_ON_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, BMI08_INT1_Pin|BMI08_INT3_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, BT_KEY_Pin|DISP_RST_Pin|NSLEEP_Pin|LED2_Pin
@@ -727,17 +804,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : DISP_CS_Pin */
-  GPIO_InitStruct.Pin = DISP_CS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  /*Configure GPIO pins : DISP_CS_Pin DISP_ON_Pin */
+  GPIO_InitStruct.Pin = DISP_CS_Pin|DISP_ON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
-  HAL_GPIO_Init(DISP_CS_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BMI08_INT1_Pin BMI08_INT3_Pin */
   GPIO_InitStruct.Pin = BMI08_INT1_Pin|BMI08_INT3_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -773,16 +849,8 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : USB_PWRD_Pin */
   GPIO_InitStruct.Pin = USB_PWRD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(USB_PWRD_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : DISP_SCK_Pin DISP_MOSI_Pin */
-  GPIO_InitStruct.Pin = DISP_SCK_Pin|DISP_MOSI_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : DISP_DC_Pin */
   GPIO_InitStruct.Pin = DISP_DC_Pin;
@@ -812,8 +880,11 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  HAL_GPIO_WritePin(BT_PWRN_GPIO_Port, BT_PWRN_Pin, GPIO_PIN_SET);	// active low
+
   while (1)
   {
+	  sos_error();
   }
   /* USER CODE END Error_Handler_Debug */
 }
