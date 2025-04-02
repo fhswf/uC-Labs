@@ -49,24 +49,25 @@ uint8_t bt_init()
 
 #ifdef BT_DEBUG
 	printf("   ... power up bluetooth module\r\n");
-	HAL_Delay(200);
 #endif
 	// Temporarily set bt_ok_g to ongoing
+
 	bt_ok_g = BT_INITIALIZING;
-	uart_bt_baudrate(BT_BAUDRATE);
 
 	// Power up BT Module in normal mode (Way 1 in Data Sheet to check correct baud rate)
 	// i.e. BT_Key=Low
 	HAL_GPIO_WritePin(BT_KEY_GPIO_Port, BT_KEY_Pin, GPIO_PIN_RESET);
-	HAL_Delay(10);
+	HAL_Delay(100);
 	HAL_GPIO_WritePin(BT_PWRN_GPIO_Port, BT_PWRN_Pin, GPIO_PIN_RESET);	// active low
-	// IMPORTANT: Wait at least 900ms after power up!
+
+	uart_bt_baudrate(BT_BAUDRATE);
+
 	HAL_Delay(1000);
-	// Temporarily switch to command mode
+	// Temporaly switch to command mode
 	HAL_GPIO_WritePin(BT_KEY_GPIO_Port, BT_KEY_Pin, GPIO_PIN_SET);
-	HAL_Delay(10);
+	HAL_Delay(200);
 	bt_send("AT+NAME?\r\n");
-	HAL_Delay(10);
+	HAL_Delay(300);
 	printf("Waiting for reply on AT+NAME\r\n");
 	//while (!uart_bt_tx_done());
 	status = bt_receive(recbuf,sizeof(recbuf));
@@ -117,10 +118,10 @@ uint8_t bt_init()
 		bt_name, BT_BAUDRATE);
 //#endif
 	// Back to normal mode
-	//HAL_GPIO_WritePin(BT_PWRN_GPIO_Port, BT_PWRN_Pin, GPIO_PIN_SET); 	// active low
+	HAL_GPIO_WritePin(BT_PWRN_GPIO_Port, BT_PWRN_Pin, GPIO_PIN_SET); 	// active low
 	HAL_GPIO_WritePin(BT_KEY_GPIO_Port, BT_KEY_Pin, GPIO_PIN_RESET);
-	HAL_Delay(100);
-	//HAL_GPIO_WritePin(BT_PWRN_GPIO_Port, BT_PWRN_Pin, GPIO_PIN_RESET);  	// active low
+	HAL_Delay(200);
+	HAL_GPIO_WritePin(BT_PWRN_GPIO_Port, BT_PWRN_Pin, GPIO_PIN_RESET);  	// active low
 	bt_ok_g = BT_READY;
 
 	return 0;

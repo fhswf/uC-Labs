@@ -38,34 +38,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := BootUSB431
+BUILD_ARTIFACT_NAME := Test431
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-BootUSB431.elf \
+Test431.elf \
 
 MAP_FILES += \
-BootUSB431.map \
+Test431.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-BootUSB431.list \
+Test431.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: BootUSB431.elf secondary-outputs
+main-build: Test431.elf secondary-outputs
 
 # Tool invocations
-BootUSB431.elf BootUSB431.map: $(OBJS) $(USER_OBJS) C:\Users\tobi\git\uC-Labs\BootUSB431\STM32G431RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "BootUSB431.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\tobi\git\uC-Labs\BootUSB431\STM32G431RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BootUSB431.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Test431.elf Test431.map: $(OBJS) $(USER_OBJS) C:\workspaces\stm32\Labs\Test431\STM32G431RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Test431.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\workspaces\stm32\Labs\Test431\STM32G431RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Test431.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -74,14 +74,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-BootUSB431.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "BootUSB431.list"
+Test431.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Test431.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) BootUSB431.elf BootUSB431.list BootUSB431.map default.size.stdout
+	-$(RM) Test431.elf Test431.list Test431.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

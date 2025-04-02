@@ -33,41 +33,23 @@
 #include "bluetooth.h"
 #include <stdio.h>
 #include "bldc.h"
-#include "display.h"
 
 #define MAIN_C
 #include "globals.h"
 
-extern I2C_HandleTypeDef hi2c1;
-
 
 void main_user(void)
 {
-	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(DISP_ON_GPIO_Port, DISP_ON_Pin, GPIO_PIN_SET);
-	HAL_Delay(1000);
-
-	display_init();		// initialize display driver
-	printf("UART Initializiation\r\n");
+	int cnt=0;
+	HAL_Delay(200);
 	uart_init();
-	HAL_Delay(100);
-	printf("UART Initialized done\r\n");
+	printf("UART Initialized\r\n");
 	// Init Bluetooth
-
 	bt_init();
 
-	printf("BT Initialized done\r\n");
-
-
-	main_bmi();
-	while(1)
-	{
-		printf("Hello Printf\r\n");
-		HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-		HAL_Delay(500);
-	}
 	bldc_init();
 
+	main_bmi();
 	while(1)
 	{
 
