@@ -1,1 +1,10 @@
-/Prisma4_V02/
+# eclipse specific git ignore
+.metadata/
+RemoteSystemsTempFiles/
+.settings/
+Debug/
+Release/
+*.launch
+
+# STM32 git ignore
+*.mxproject
