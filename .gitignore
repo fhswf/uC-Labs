@@ -8,5 +8,8 @@ Release/
 
 # STM32 git ignore
 *.mxproject
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> branch 'master' of https://github.com/fhswf/uC-Labs
