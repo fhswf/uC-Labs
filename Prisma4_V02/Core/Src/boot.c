@@ -86,6 +86,9 @@ void boot_stage2()
 	// Init GPIO for bootloader only
 	MX_GPIO_Init_boot();
 
+	// Continue with normal start if no USB cable plugged
+	if (HAL_GPIO_ReadPin(USB_PWRD_GPIO_Port, USB_PWRD_Pin)==0) return;
+
 
 	// Now set BOOT Flag
 	*bootloader_flag = BOOTLOADER_FLAG_VALUE;
@@ -148,6 +151,13 @@ static void MX_GPIO_Init_boot(void)
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	/*Configure GPIO pin : USB_PWRD_Pin */
+	GPIO_InitStruct.Pin = USB_PWRD_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+	HAL_GPIO_Init(USB_PWRD_GPIO_Port, &GPIO_InitStruct);
+
 }
 
 /******************************************************
