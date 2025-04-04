@@ -41,7 +41,7 @@
 
 extern I2C_HandleTypeDef hi2c1;
 
-void main_bmi();
+void main_bmi(); //read sensor
 
 void main_user(void)
 {
